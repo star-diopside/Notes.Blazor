@@ -1,0 +1,19 @@
+﻿@page "/uploadfiles"
+@using Notes.Blazor.Client.ViewModels
+@inject UploadFilesViewModel ViewModel
+
+<PageTitle>Upload files</PageTitle>
+
+<h1>Upload files</h1>
+
+<div class="row mb-3">
+    <div class="col-sm-12">
+        <InputFile OnChange="ViewModel.LoadFilesAsync" />
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-sm-12">
+        <p style="white-space:break-spaces">@ViewModel.Text</p>
+    </div>
+</div>
