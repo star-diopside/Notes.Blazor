@@ -10,7 +10,7 @@ public class UploadFilesViewModel
     private readonly HttpClient _httpClient;
 
     public IBrowserFile? SelectedFile { get; set; }
-    public IEnumerable<EncodingInfo> Encodings { get; } = Encoding.GetEncodings();
+    public IEnumerable<EncodingInfo> Encodings { get; } = Encoding.GetEncodings().OrderBy(info => info.CodePage).ToArray();
     public int? EncodingCodePage { get; set; }
     public bool IsDetectEncodingFromByteOrderMarks { get; set; }
     public string? Text { get; set; }
