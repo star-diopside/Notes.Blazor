@@ -8,7 +8,30 @@
 
 <div class="row mb-3">
     <div class="col-sm-12">
-        <InputFile OnChange="ViewModel.LoadFilesAsync" />
+        <InputFile OnChange="ChangeSelectedFileAsync" />
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-sm-12">
+        <select value="@ViewModel.EncodingCodePage" @onchange="ChangeEncodingCodePageAsync" class="form-control">
+            <option value="">-</option>
+            @foreach (var encoding in ViewModel.Encodings)
+            {
+                <option value="@encoding.CodePage">@encoding.DisplayName</option>
+            }
+        </select>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-sm-12">
+        <div class="form-check">
+            <label class="form-check-label">
+                <input type="checkbox" value="@ViewModel.IsDetectEncodingFromByteOrderMarks" @onchange="ChangeIsDetectEncodingFromByteOrderMarksAsync" class="form-check-input" />
+                BOMが設定されている場合はそれに従う
+            </label>
+        </div>
     </div>
 </div>
 
@@ -17,3 +40,23 @@
         <p style="white-space:break-spaces">@ViewModel.Text</p>
     </div>
 </div>
+
+@code {
+    private async Task ChangeSelectedFileAsync(InputFileChangeEventArgs e)
+    {
+        ViewModel.SelectedFile = e.File;
+        await ViewModel.UploadSelectedFileAsync();
+    }
+
+    private async Task ChangeEncodingCodePageAsync(ChangeEventArgs e)
+    {
+        ViewModel.EncodingCodePage = int.TryParse(e.Value?.ToString(), out var codepage) ? codepage : null;
+        await ViewModel.ReadFileAsync();
+    }
+
+    private async Task ChangeIsDetectEncodingFromByteOrderMarksAsync(ChangeEventArgs e)
+    {
+        ViewModel.IsDetectEncodingFromByteOrderMarks = (bool?)e.Value ?? false;
+        await ViewModel.ReadFileAsync();
+    }
+}

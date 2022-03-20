@@ -1,5 +1,6 @@
 using Hnx8.ReadJEnc;
 using Microsoft.AspNetCore.Components.Forms;
+using System.Text;
 
 namespace Notes.Blazor.Client.ViewModels;
 
@@ -8,6 +9,10 @@ public class UploadFilesViewModel
     private readonly ILogger<UploadFilesViewModel> _logger;
     private readonly HttpClient _httpClient;
 
+    public IBrowserFile? SelectedFile { get; set; }
+    public IEnumerable<EncodingInfo> Encodings { get; } = Encoding.GetEncodings();
+    public int? EncodingCodePage { get; set; }
+    public bool IsDetectEncodingFromByteOrderMarks { get; set; }
     public string? Text { get; set; }
 
     public UploadFilesViewModel(ILogger<UploadFilesViewModel> logger, HttpClient httpClient)
@@ -16,33 +21,37 @@ public class UploadFilesViewModel
         _httpClient = httpClient;
     }
 
-    public async Task LoadFilesAsync(InputFileChangeEventArgs e)
+    public async Task UploadSelectedFileAsync()
     {
-        try
+        if (SelectedFile is null)
         {
-            _logger.LogDebug("File: {File}", new { e.File.Name, e.File.Size, e.File.ContentType, e.File.LastModified });
-
-            using var multipart = new MultipartFormDataContent();
-            var content = new StreamContent(e.File.OpenReadStream());
-            if (!string.IsNullOrEmpty(e.File.ContentType))
-            {
-                content.Headers.ContentType = new(e.File.ContentType);
-            }
-            multipart.Add(content, "file", e.File.Name);
-            var uploadTask = _httpClient.PostAsync("UploadFiles", multipart);
-
-            Text = await ReadTextAsync(e.File);
-
-            var response = await uploadTask;
-            _logger.LogDebug("HttpResponseMessage: {Response}", response);
+            return;
         }
-        catch (Exception ex)
+
+        _logger.LogDebug("File: {File}", new
         {
-            _logger.LogError(ex, ex.Message);
+            SelectedFile.Name,
+            SelectedFile.Size,
+            SelectedFile.ContentType,
+            SelectedFile.LastModified
+        });
+
+        using var multipart = new MultipartFormDataContent();
+        var content = new StreamContent(SelectedFile.OpenReadStream());
+        if (!string.IsNullOrEmpty(SelectedFile.ContentType))
+        {
+            content.Headers.ContentType = new(SelectedFile.ContentType);
         }
+        multipart.Add(content, "file", SelectedFile.Name);
+        var uploadTask = _httpClient.PostAsync("UploadFiles", multipart);
+
+        (Text, EncodingCodePage) = await GetEncodingFromFileAsync(SelectedFile);
+
+        var response = await uploadTask;
+        _logger.LogDebug("HttpResponseMessage: {Response}", response);
     }
 
-    private async Task<string?> ReadTextAsync(IBrowserFile file)
+    private static async Task<(string? text, int? codepage)> GetEncodingFromFileAsync(IBrowserFile file)
     {
         byte[] array;
 
@@ -57,12 +66,25 @@ public class UploadFilesViewModel
 
         if (code is null)
         {
-            return null;
+            return (null, null);
         }
         else
         {
-            _logger.LogDebug("CharCode: {CharCode}", code);
-            return readText;
+            return (readText, code.GetEncoding().CodePage);
+        }
+    }
+
+    public async ValueTask ReadFileAsync()
+    {
+        if (SelectedFile is not null && EncodingCodePage.HasValue)
+        {
+            var encoding = Encoding.GetEncoding(EncodingCodePage.Value);
+            using var reader = new StreamReader(SelectedFile.OpenReadStream(), encoding, IsDetectEncodingFromByteOrderMarks);
+            Text = await reader.ReadToEndAsync();
+        }
+        else
+        {
+            Text = string.Empty;
         }
     }
 }
