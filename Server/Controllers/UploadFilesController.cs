@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Notes.Blazor.Shared;
+using System.Security.Cryptography;
 
 namespace Notes.Blazor.Server.Controllers;
 
@@ -19,10 +21,21 @@ public class UploadFilesController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult Post(IFormFile file)
+    public async Task<IActionResult> PostAsync(IFormFile file)
     {
-        _logger.LogDebug("FileName: {FileName}, Length: {Length}, ContentType: {ContentType}",
-                         file.FileName, file.Length, file.ContentType);
-        return CreatedAtAction(nameof(Get), new { id = 1 }, null);
+        byte[] hash;
+
+        using (var sha256 = SHA256.Create())
+        using (var stream = file.OpenReadStream())
+        {
+            hash = await sha256.ComputeHashAsync(stream);
+        }
+
+        var uploadFile = new UploadFile(file.FileName,
+                                        file.ContentType,
+                                        file.Length,
+                                        string.Concat(hash.Select(b => b.ToString("x2"))));
+
+        return CreatedAtAction(nameof(Get), new { id = 1 }, uploadFile);
     }
 }

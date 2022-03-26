@@ -1,13 +1,14 @@
 ﻿using Hnx8.ReadJEnc;
 using Microsoft.AspNetCore.Components.Forms;
+using Notes.Blazor.Client.Services;
 using System.Text;
 
 namespace Notes.Blazor.Client.ViewModels;
 
 public class UploadFilesViewModel
 {
+    private readonly IHostService _hostService;
     private readonly ILogger<UploadFilesViewModel> _logger;
-    private readonly HttpClient _httpClient;
 
     /// <summary>選択されたファイル</summary>
     public IBrowserFile? SelectedFile { get; set; }
@@ -27,10 +28,10 @@ public class UploadFilesViewModel
     /// <summary>テキストファイルから取得した文字列</summary>
     public string? Text { get; set; }
 
-    public UploadFilesViewModel(ILogger<UploadFilesViewModel> logger, HttpClient httpClient)
+    public UploadFilesViewModel(IHostService hostService, ILogger<UploadFilesViewModel> logger)
     {
+        _hostService = hostService;
         _logger = logger;
-        _httpClient = httpClient;
     }
 
     /// <summary>
@@ -44,7 +45,7 @@ public class UploadFilesViewModel
             return;
         }
 
-        _logger.LogDebug("File: {File}", new
+        _logger.LogInformation("SelectedFile: {SelectedFile}", new
         {
             SelectedFile.Name,
             SelectedFile.Size,
@@ -52,19 +53,12 @@ public class UploadFilesViewModel
             SelectedFile.LastModified
         });
 
-        using var multipart = new MultipartFormDataContent();
-        var content = new StreamContent(SelectedFile.OpenReadStream());
-        if (!string.IsNullOrEmpty(SelectedFile.ContentType))
-        {
-            content.Headers.ContentType = new(SelectedFile.ContentType);
-        }
-        multipart.Add(content, "file", SelectedFile.Name);
-        var uploadTask = _httpClient.PostAsync("UploadFiles", multipart);
+        var uploadTask = _hostService.UploadFileAsync(SelectedFile);
 
         (EncodingCodePage, Text) = await GetEncodingFromFileAsync(SelectedFile);
 
-        var response = await uploadTask;
-        _logger.LogDebug("HttpResponseMessage: {Response}", response);
+        var result = await uploadTask;
+        _logger.LogInformation("Upload Result: {Result}", result);
     }
 
     /// <summary>
