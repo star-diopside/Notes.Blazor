@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Shared\Notes.Blazor.Shared.csproj" />
+    <ProjectReference Include="..\Notes.Blazor.Shared\Notes.Blazor.Shared.csproj" />
   </ItemGroup>
 
 </Project>

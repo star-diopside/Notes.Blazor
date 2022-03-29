@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Client\Notes.Blazor.Client.csproj" />
-    <ProjectReference Include="..\Shared\Notes.Blazor.Shared.csproj" />
+    <ProjectReference Include="..\Notes.Blazor.Client\Notes.Blazor.Client.csproj" />
+    <ProjectReference Include="..\Notes.Blazor.Shared\Notes.Blazor.Shared.csproj" />
   </ItemGroup>
 
 

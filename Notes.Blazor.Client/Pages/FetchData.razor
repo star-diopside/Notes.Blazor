@@ -1,6 +1,6 @@
 ﻿@page "/fetchdata"
 @using Notes.Blazor.Shared
-@inject HttpClient Http
+@inject IHttpClientFactory HttpClientFactory
 
 <PageTitle>Weather forecast</PageTitle>
 
@@ -42,6 +42,6 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("WeatherForecast");
+        forecasts = await HttpClientFactory.CreateClient("webapi").GetFromJsonAsync<WeatherForecast[]>("WeatherForecast");
     }
 }

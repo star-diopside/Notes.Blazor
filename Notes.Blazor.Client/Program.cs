@@ -12,6 +12,7 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddHttpClient<IHostService, HostService>(client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress));
+builder.Services.AddHttpClient("webapi", client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress));
 builder.Services.AddScoped<UploadFilesViewModel>();
 
 await builder.Build().RunAsync();
