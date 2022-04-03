@@ -1,8 +1,16 @@
-using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.EntityFrameworkCore;
+using Notes.Blazor.Data;
+using Notes.Blazor.Data.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddDbContext<NotesDbContext>(options => options.UseNpgsql(
+    builder.Configuration.GetConnectionString("DefaultConnection"),
+    b => b.MigrationsAssembly("Notes.Blazor.Server")));
+
+builder.Services.AddScoped<IUserFileRepository, UserFileRepository>();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();

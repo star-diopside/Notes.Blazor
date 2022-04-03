@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Notes.Blazor.Shared;
+using Notes.Blazor.Data.Models;
+using Notes.Blazor.Data.Repositories;
+using Notes.Blazor.Server.Models;
 using System.Security.Cryptography;
 
 namespace Notes.Blazor.Server.Controllers;
@@ -8,16 +10,24 @@ namespace Notes.Blazor.Server.Controllers;
 [Route("[controller]")]
 public class UploadFilesController : ControllerBase
 {
-    private readonly ILogger<UploadFilesController> _logger;
+    private readonly IUserFileRepository _userFileRepository;
 
-    public UploadFilesController(ILogger<UploadFilesController> logger)
+    public UploadFilesController(IUserFileRepository userFileRepository)
     {
-        _logger = logger;
+        _userFileRepository = userFileRepository;
     }
 
     [HttpGet("{id}")]
-    public void Get(int id)
+    public async ValueTask<IActionResult> GetAsync(int id)
     {
+        var userFile = await _userFileRepository.FindByIdAsync(id);
+
+        if (userFile is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(userFile.ToUploadFile());
     }
 
     [HttpPost]
@@ -31,11 +41,13 @@ public class UploadFilesController : ControllerBase
             hash = await sha256.ComputeHashAsync(stream);
         }
 
-        var uploadFile = new UploadFile(file.FileName,
-                                        file.ContentType,
-                                        file.Length,
-                                        string.Concat(hash.Select(b => b.ToString("x2"))));
+        var userFile = _userFileRepository.Add(new UserFile(
+            fileName: file.FileName,
+            contentType: file.ContentType,
+            length: file.Length,
+            hashValue: string.Concat(hash.Select(b => b.ToString("x2")))));
+        await _userFileRepository.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(Get), new { id = 1 }, uploadFile);
+        return CreatedAtAction("Get", new { id = userFile.Id }, userFile.ToUploadFile());
     }
 }

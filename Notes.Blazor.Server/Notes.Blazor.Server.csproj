@@ -8,10 +8,16 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="6.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.3" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Notes.Blazor.Client\Notes.Blazor.Client.csproj" />
+    <ProjectReference Include="..\Notes.Blazor.Data\Notes.Blazor.Data.csproj" />
     <ProjectReference Include="..\Notes.Blazor.Shared\Notes.Blazor.Shared.csproj" />
   </ItemGroup>
 
