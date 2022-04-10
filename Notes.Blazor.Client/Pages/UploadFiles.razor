@@ -103,7 +103,7 @@
 
     private async Task ChangeIsDetectEncodingFromByteOrderMarksAsync(ChangeEventArgs e)
     {
-        ViewModel.IsDetectEncodingFromByteOrderMarks = (bool?)e.Value ?? false;
+        ViewModel.IsDetectEncodingFromByteOrderMarks = ((bool?)e.Value).GetValueOrDefault();
         await ViewModel.ReadFileAsync();
     }
 }

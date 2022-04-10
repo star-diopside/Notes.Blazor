@@ -167,7 +167,7 @@ public class UploadFilesViewModel
     {
         if (SelectedFile is not null && EncodingCodePage.HasValue)
         {
-            var encoding = Encoding.GetEncoding(EncodingCodePage.Value);
+            var encoding = Encoding.GetEncoding(EncodingCodePage.GetValueOrDefault());
             using var reader = new StreamReader(SelectedFile.OpenReadStream(), encoding, IsDetectEncodingFromByteOrderMarks);
             Text = await reader.ReadToEndAsync();
         }
