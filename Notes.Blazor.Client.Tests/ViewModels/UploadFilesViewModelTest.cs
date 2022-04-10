@@ -19,13 +19,12 @@ public class UploadFilesViewModelTest
         var viewModel = new UploadFilesViewModel(mockHostService.Object, mockLogger.Object);
         await viewModel.UploadSelectedFileAsync();
 
-        Assert.Null(viewModel.EncodingCodePage);
-        Assert.Null(viewModel.Text);
+        mockHostService.Verify(hostService => hostService.UploadFileAsync(It.IsAny<IBrowserFile>()), Times.Never);
     }
 
     [Theory]
     [MemberData(nameof(UploadSelectedFileAsync_TextFile_Success_TestData))]
-    public async Task UploadSelectedFileAsync_TextFile_Success(string str, Encoding encoding, int expectedCodePage)
+    public async Task UploadSelectedFileAsync_TextFile_Success(string str, Encoding encoding)
     {
         var mockHostService = new Mock<IHostService>();
         var mockLogger = new Mock<ILogger<UploadFilesViewModel>>();
@@ -39,11 +38,51 @@ public class UploadFilesViewModelTest
         };
         await viewModel.UploadSelectedFileAsync();
 
+        mockHostService.Verify(hostService => hostService.UploadFileAsync(It.IsAny<IBrowserFile>()), Times.Once);
+    }
+
+    public static IEnumerable<object[]> UploadSelectedFileAsync_TextFile_Success_TestData()
+    {
+        foreach (var data in GetEncodingFromFileAsync_TextFile_Success_TestData())
+        {
+            yield return data.Take(2).ToArray();
+        }
+    }
+
+    [Fact]
+    public async Task GetEncodingFromFileAsync_SelectedFileIsNull()
+    {
+        var mockHostService = new Mock<IHostService>();
+        var mockLogger = new Mock<ILogger<UploadFilesViewModel>>();
+
+        var viewModel = new UploadFilesViewModel(mockHostService.Object, mockLogger.Object);
+        await viewModel.GetEncodingFromFileAsync();
+
+        Assert.Null(viewModel.EncodingCodePage);
+        Assert.Null(viewModel.Text);
+    }
+
+    [Theory]
+    [MemberData(nameof(GetEncodingFromFileAsync_TextFile_Success_TestData))]
+    public async Task GetEncodingFromFileAsync_TextFile_Success(string str, Encoding encoding, int expectedCodePage)
+    {
+        var mockHostService = new Mock<IHostService>();
+        var mockLogger = new Mock<ILogger<UploadFilesViewModel>>();
+        var mockBrowserFile = new Mock<IBrowserFile>();
+        mockBrowserFile.Setup(file => file.OpenReadStream(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+                       .Returns(() => new MemoryStream(encoding.GetBytes(str), false));
+
+        var viewModel = new UploadFilesViewModel(mockHostService.Object, mockLogger.Object)
+        {
+            SelectedFile = mockBrowserFile.Object
+        };
+        await viewModel.GetEncodingFromFileAsync();
+
         Assert.Equal(expectedCodePage, viewModel.EncodingCodePage);
         Assert.Equal(str, viewModel.Text);
     }
 
-    public static IEnumerable<object[]> UploadSelectedFileAsync_TextFile_Success_TestData()
+    public static IEnumerable<object[]> GetEncodingFromFileAsync_TextFile_Success_TestData()
     {
         yield return new object[] { "ASCII Only", Encoding.ASCII, Encoding.UTF8.CodePage };
         yield return new object[] { "ASCII Only (UTF8 BOM)", Encoding.UTF8, Encoding.UTF8.CodePage };

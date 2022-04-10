@@ -1,20 +1,34 @@
-﻿using Hnx8.ReadJEnc;
+﻿using ColorCode;
+using Hnx8.ReadJEnc;
+using Markdig;
+using Markdown.ColorCode;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Notes.Blazor.Client.Services;
 using System.Text;
 
 namespace Notes.Blazor.Client.ViewModels;
 
+public enum TextType { Plain, Markdown, Language }
+
 public class UploadFilesViewModel
 {
     private readonly IHostService _hostService;
     private readonly ILogger<UploadFilesViewModel> _logger;
+    private readonly MarkdownPipeline _markdownPipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .UseColorCode()
+        .Build();
+    private TextType _textType;
+    private string? _languageId;
+    private string? _text;
+    private MarkupString? _markupString;
 
     /// <summary>選択されたファイル</summary>
     public IBrowserFile? SelectedFile { get; set; }
 
     /// <summary>使用可能な文字エンコード一覧</summary>
-    public IEnumerable<EncodingInfo> Encodings { get; } = Encoding.GetEncodings().OrderBy(info => info.CodePage).ToArray();
+    public IEnumerable<EncodingInfo> SupportedEncodings { get; } = Encoding.GetEncodings().OrderBy(info => info.CodePage).ToArray();
 
     /// <summary>テキストを読み取る文字エンコードのコードページ</summary>
     public int? EncodingCodePage { get; set; }
@@ -25,8 +39,57 @@ public class UploadFilesViewModel
     /// </summary>
     public bool IsDetectEncodingFromByteOrderMarks { get; set; }
 
+    /// <summary>表示するテキストタイプ</summary>
+    public TextType TextType
+    {
+        get => _textType;
+        set
+        {
+            _textType = value;
+            _markupString = null;
+        }
+    }
+
+    /// <summary>マークアップをサポートする言語一覧</summary>
+    public IEnumerable<ILanguage> SupportedLanguages { get; } = Languages.All.OrderBy(lang => lang.Name).ToArray();
+
+    /// <summary>マークアップする言語ID</summary>
+    public string? LanguageId
+    {
+        get => _languageId;
+        set
+        {
+            _languageId = value;
+            _markupString = null;
+        }
+    }
+
     /// <summary>テキストファイルから取得した文字列</summary>
-    public string? Text { get; set; }
+    public string? Text
+    {
+        get => _text;
+        set
+        {
+            _text = value;
+            _markupString = null;
+        }
+    }
+
+    /// <summary>
+    /// <see cref="Text"/>をマークアップした文字列
+    /// </summary>
+    public MarkupString MarkupString => _markupString ??= Text is null ? default : (MarkupString)(TextType switch
+    {
+        TextType.Markdown => Markdig.Markdown.ToHtml(Text, _markdownPipeline),
+        TextType.Language => GetHtmlString(),
+        _ => throw new InvalidOperationException()
+    });
+
+    private string GetHtmlString()
+    {
+        var language = string.IsNullOrEmpty(LanguageId) ? null : Languages.FindById(LanguageId);
+        return language is null ? string.Empty : new HtmlFormatter().GetHtmlString(Text, language);
+    }
 
     public UploadFilesViewModel(IHostService hostService, ILogger<UploadFilesViewModel> logger)
     {
@@ -53,12 +116,21 @@ public class UploadFilesViewModel
             SelectedFile.LastModified
         });
 
-        var uploadTask = _hostService.UploadFileAsync(SelectedFile);
+        var result = await _hostService.UploadFileAsync(SelectedFile);
 
-        (EncodingCodePage, Text) = await GetEncodingFromFileAsync(SelectedFile);
-
-        var result = await uploadTask;
         _logger.LogInformation("Upload Result: {Result}", result);
+    }
+
+    /// <summary>
+    /// <see cref="SelectedFile"/>から文字エンコードを自動判別する。
+    /// </summary>
+    /// <returns>非同期操作を表すタスクオブジェクト</returns>
+    public async Task GetEncodingFromFileAsync()
+    {
+        if (SelectedFile is not null)
+        {
+            (EncodingCodePage, Text) = await GetEncodingFromFileAsync(SelectedFile);
+        }
     }
 
     /// <summary>

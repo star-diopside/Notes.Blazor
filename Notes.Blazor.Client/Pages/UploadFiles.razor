@@ -6,46 +6,93 @@
 
 <h1>Upload files</h1>
 
-<div class="row mb-3">
-    <div class="col-sm-12">
-        <InputFile OnChange="ChangeSelectedFileAsync" />
-    </div>
-</div>
-
-<div class="row mb-3">
-    <div class="col-sm-12">
-        <select value="@ViewModel.EncodingCodePage" @onchange="ChangeEncodingCodePageAsync" class="form-control">
-            <option value="">-</option>
-            @foreach (var encoding in ViewModel.Encodings)
-            {
-                <option value="@encoding.CodePage">@encoding.Name</option>
-            }
-        </select>
-    </div>
-</div>
-
-<div class="row mb-3">
-    <div class="col-sm-12">
-        <div class="form-check">
-            <label class="form-check-label">
-                <input type="checkbox" value="@ViewModel.IsDetectEncodingFromByteOrderMarks" @onchange="ChangeIsDetectEncodingFromByteOrderMarksAsync" class="form-check-input" />
-                BOMが設定されている場合はそれに従う
-            </label>
+<EditForm Model="ViewModel">
+    <div class="row mb-3">
+        <div class="col-sm">
+            <div class="input-group">
+                <InputFile OnChange="ChangeSelectedFileAsync" class="form-control" id="inputGroupFile" aria-describedby="inputGroupFileAddon" aria-label="Upload" />
+                <button type="button" class="btn btn-outline-primary" id="inputGroupFileAddon" @onclick="ViewModel.UploadSelectedFileAsync">アップロード</button>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="row mb-3">
-    <div class="col-sm-12">
-        <p style="white-space:break-spaces">@ViewModel.Text</p>
+    <div class="row mb-3">
+        <div class="col-sm-auto">
+            <select class="form-select" value="@ViewModel.EncodingCodePage" @onchange="ChangeEncodingCodePageAsync">
+                <option value="">-</option>
+                @foreach (var encoding in ViewModel.SupportedEncodings)
+                {
+                    <option value="@encoding.CodePage">@encoding.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-sm-auto">
+            <div class="form-check">
+                <label class="form-check-label col-form-label">
+                    <input type="checkbox" class="form-check-input" value="@ViewModel.IsDetectEncodingFromByteOrderMarks" @onchange="ChangeIsDetectEncodingFromByteOrderMarksAsync" />
+                    BOMが設定されている場合はそれに従う
+                </label>
+            </div>
+        </div>
     </div>
-</div>
+
+    <div class="row mb-3">
+        <InputRadioGroup @bind-Value="ViewModel.TextType">
+            <div class="col-sm-auto">
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <InputRadio Value="TextType.Plain" class="form-check-input mt-0" id="textTypePlain" />
+                    </div>
+                    <label class="form-check-label input-group-text" for="textTypePlain">Plain Text</label>
+                </div>
+            </div>
+
+            <div class="col-sm-auto">
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <InputRadio Value="TextType.Markdown" class="form-check-input mt-0" id="textTypeMarkdown" />
+                    </div>
+                    <label class="form-check-label input-group-text" for="textTypeMarkdown">Markdown</label>
+                </div>
+            </div>
+
+            <div class="col-sm-auto">
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <InputRadio Value="TextType.Language" class="form-check-input mt-0" id="textTypeLanguage" />
+                    </div>
+                    <label class="form-check-label input-group-text" for="textTypeLanguage">Language</label>
+                    <InputSelect @bind-Value="ViewModel.LanguageId" class="form-select">
+                        <option value="">-</option>
+                        @foreach (var lang in ViewModel.SupportedLanguages)
+                        {
+                            <option value="@lang.Id">@lang.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+        </InputRadioGroup>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-sm-12">
+            @if (ViewModel.TextType == TextType.Plain)
+            {
+                <p style="white-space:break-spaces">@ViewModel.Text</p>
+            }
+            else
+            {
+                @ViewModel.MarkupString
+            }
+        </div>
+    </div>
+</EditForm>
 
 @code {
     private async Task ChangeSelectedFileAsync(InputFileChangeEventArgs e)
     {
         ViewModel.SelectedFile = e.File;
-        await ViewModel.UploadSelectedFileAsync();
+        await ViewModel.GetEncodingFromFileAsync();
     }
 
     private async Task ChangeEncodingCodePageAsync(ChangeEventArgs e)
