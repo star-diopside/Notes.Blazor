@@ -3,31 +3,31 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Notes.Blazor.Data.Models;
 
-public class UserFile
+public class UserFile : ITrackable
 {
     public int Id { get; set; }
 
-    [Required]
     public string FileName { get; set; }
 
-    [Required]
-    public string ContentType { get; set; }
+    public string? ContentType { get; set; }
 
-    [Required]
     public long Length { get; set; }
 
-    [Required]
+    [MaxLength(64)]
     public string HashValue { get; set; }
+
+    public DateTime? CreatedAt { get; set; }
+
+    public DateTime? UpdatedAt { get; set; }
 
     [Timestamp]
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     [Column("xmin", TypeName = "xid")]
     public uint Version { get; set; }
 
-    public UserFile(string fileName, string contentType, long length, string hashValue)
+    public UserFile(string fileName, long length, string hashValue)
     {
         FileName = fileName;
-        ContentType = contentType;
         Length = length;
         HashValue = hashValue;
     }

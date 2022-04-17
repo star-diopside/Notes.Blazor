@@ -43,9 +43,11 @@ public class UploadFilesController : ControllerBase
 
         var userFile = _userFileRepository.Add(new UserFile(
             fileName: file.FileName,
-            contentType: file.ContentType,
             length: file.Length,
-            hashValue: string.Concat(hash.Select(b => b.ToString("x2")))));
+            hashValue: string.Concat(hash.Select(b => b.ToString("x2"))))
+        {
+            ContentType = file.ContentType
+        });
         await _userFileRepository.SaveChangesAsync();
 
         return CreatedAtAction("Get", new { id = userFile.Id }, userFile.ToUploadFile());

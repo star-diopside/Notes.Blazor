@@ -33,7 +33,7 @@ public class UploadFilesControllerTest
     {
         var mockUserFileRepository = new Mock<IUserFileRepository>();
         mockUserFileRepository.Setup(repository => repository.FindByIdAsync(id))
-                              .ReturnsAsync(() => new UserFile(fileName, contentType, length, hashValue) { Id = id });
+                              .ReturnsAsync(() => new UserFile(fileName, length, hashValue) { Id = id, ContentType = contentType });
 
         var controller = new UploadFilesController(mockUserFileRepository.Object);
         var result = await controller.GetAsync(id);
@@ -55,11 +55,11 @@ public class UploadFilesControllerTest
         mockUserFileRepository.Setup(repository => repository.Add(It.IsAny<UserFile>()))
                               .Returns((UserFile userFile) => new UserFile(
                                   fileName: userFile.FileName,
-                                  contentType: userFile.ContentType,
                                   length: userFile.Length,
                                   hashValue: userFile.HashValue)
                               {
-                                  Id = id
+                                  Id = id,
+                                  ContentType = userFile.ContentType
                               });
 
         var mockFormFile = new Mock<IFormFile>();
