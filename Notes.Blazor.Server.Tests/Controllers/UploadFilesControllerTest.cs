@@ -40,11 +40,11 @@ public class UploadFilesControllerTest
 
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.Equal((int)HttpStatusCode.OK, okResult.StatusCode);
-        var uploadFile = Assert.IsType<UploadFile>(okResult.Value);
-        Assert.Equal(fileName, uploadFile.FileName);
-        Assert.Equal(contentType, uploadFile.ContentType);
-        Assert.Equal(length, uploadFile.Length);
-        Assert.Equal(hashValue, uploadFile.HashValue);
+        var value = Assert.IsType<UploadedFile>(okResult.Value);
+        Assert.Equal(fileName, value.FileName);
+        Assert.Equal(contentType, value.ContentType);
+        Assert.Equal(length, value.Length);
+        Assert.Equal(hashValue, value.HashValue);
     }
 
     [Theory]
@@ -86,7 +86,7 @@ public class UploadFilesControllerTest
         Assert.Null(createdResult.ControllerName);
         Assert.Equal(id, createdResult.RouteValues?["id"]);
         Assert.Equal((int)HttpStatusCode.Created, createdResult.StatusCode);
-        var value = Assert.IsType<UploadFile>(createdResult.Value);
+        var value = Assert.IsType<UploadedFile>(createdResult.Value);
         Assert.Equal(fileName, value.FileName);
         Assert.Equal(contentType, value.ContentType);
         Assert.Equal(length, value.Length);

@@ -7,14 +7,14 @@ using Microsoft.AspNetCore.Components.Forms;
 using Notes.Blazor.Client.Services;
 using System.Text;
 
-namespace Notes.Blazor.Client.ViewModels;
+namespace Notes.Blazor.Client.ViewModels.UploadFiles;
 
 public enum TextType { Plain, Markdown, Language }
 
-public class UploadFilesViewModel
+public class CreateViewModel
 {
-    private readonly IHostService _hostService;
-    private readonly ILogger<UploadFilesViewModel> _logger;
+    private readonly IUploadFileService _uploadFileService;
+    private readonly ILogger<CreateViewModel> _logger;
     private readonly MarkdownPipeline _markdownPipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
         .UseColorCode()
@@ -28,7 +28,7 @@ public class UploadFilesViewModel
     public IBrowserFile? SelectedFile { get; set; }
 
     /// <summary>使用可能な文字エンコード一覧</summary>
-    public IEnumerable<EncodingInfo> SupportedEncodings { get; } = Encoding.GetEncodings().OrderBy(info => info.CodePage).ToArray();
+    public IEnumerable<EncodingInfo> SupportedEncodings => Encoding.GetEncodings().OrderBy(info => info.CodePage);
 
     /// <summary>テキストを読み取る文字エンコードのコードページ</summary>
     public int? EncodingCodePage { get; set; }
@@ -51,7 +51,7 @@ public class UploadFilesViewModel
     }
 
     /// <summary>マークアップをサポートする言語一覧</summary>
-    public IEnumerable<ILanguage> SupportedLanguages { get; } = Languages.All.OrderBy(lang => lang.Name).ToArray();
+    public IEnumerable<ILanguage> SupportedLanguages => Languages.All.OrderBy(lang => lang.Name);
 
     /// <summary>マークアップする言語ID</summary>
     public string? LanguageId
@@ -91,9 +91,9 @@ public class UploadFilesViewModel
         return language is null ? string.Empty : new HtmlFormatter().GetHtmlString(Text, language);
     }
 
-    public UploadFilesViewModel(IHostService hostService, ILogger<UploadFilesViewModel> logger)
+    public CreateViewModel(IUploadFileService uploadFileService, ILogger<CreateViewModel> logger)
     {
-        _hostService = hostService;
+        _uploadFileService = uploadFileService;
         _logger = logger;
     }
 
@@ -116,7 +116,7 @@ public class UploadFilesViewModel
             SelectedFile.LastModified
         });
 
-        var result = await _hostService.UploadFileAsync(SelectedFile);
+        var result = await _uploadFileService.UploadFileAsync(SelectedFile).ConfigureAwait(false);
 
         _logger.LogInformation("Upload Result: {Result}", result);
     }
@@ -129,7 +129,7 @@ public class UploadFilesViewModel
     {
         if (SelectedFile is not null)
         {
-            (EncodingCodePage, Text) = await GetEncodingFromFileAsync(SelectedFile);
+            (EncodingCodePage, Text) = await GetEncodingFromFileAsync(SelectedFile).ConfigureAwait(false);
         }
     }
 
@@ -149,7 +149,7 @@ public class UploadFilesViewModel
         using (var stream = file.OpenReadStream())
         using (var memory = new MemoryStream())
         {
-            await stream.CopyToAsync(memory);
+            await stream.CopyToAsync(memory).ConfigureAwait(false);
             array = memory.ToArray();
         }
 
@@ -169,7 +169,7 @@ public class UploadFilesViewModel
         {
             var encoding = Encoding.GetEncoding(EncodingCodePage.GetValueOrDefault());
             using var reader = new StreamReader(SelectedFile.OpenReadStream(), encoding, IsDetectEncodingFromByteOrderMarks);
-            Text = await reader.ReadToEndAsync();
+            Text = await reader.ReadToEndAsync().ConfigureAwait(false);
         }
         else
         {

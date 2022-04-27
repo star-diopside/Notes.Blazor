@@ -2,43 +2,43 @@
 using Microsoft.Extensions.Logging;
 using Moq;
 using Notes.Blazor.Client.Services;
-using Notes.Blazor.Client.ViewModels;
+using Notes.Blazor.Client.ViewModels.UploadFiles;
 using System.Text;
 using Xunit;
 
-namespace Notes.Blazor.Client.Tests.ViewModels;
+namespace Notes.Blazor.Client.Tests.ViewModels.UploadFiles;
 
-public class UploadFilesViewModelTest
+public class CreateViewModelTest
 {
     [Fact]
     public async Task UploadSelectedFileAsync_SelectedFileIsNull()
     {
-        var mockHostService = new Mock<IHostService>();
-        var mockLogger = new Mock<ILogger<UploadFilesViewModel>>();
+        var mockUploadFileService = new Mock<IUploadFileService>();
+        var mockLogger = new Mock<ILogger<CreateViewModel>>();
 
-        var viewModel = new UploadFilesViewModel(mockHostService.Object, mockLogger.Object);
+        var viewModel = new CreateViewModel(mockUploadFileService.Object, mockLogger.Object);
         await viewModel.UploadSelectedFileAsync();
 
-        mockHostService.Verify(hostService => hostService.UploadFileAsync(It.IsAny<IBrowserFile>()), Times.Never);
+        mockUploadFileService.Verify(service => service.UploadFileAsync(It.IsAny<IBrowserFile>()), Times.Never);
     }
 
     [Theory]
     [MemberData(nameof(UploadSelectedFileAsync_TextFile_Success_TestData))]
     public async Task UploadSelectedFileAsync_TextFile_Success(string str, Encoding encoding)
     {
-        var mockHostService = new Mock<IHostService>();
-        var mockLogger = new Mock<ILogger<UploadFilesViewModel>>();
+        var mockUploadFileService = new Mock<IUploadFileService>();
+        var mockLogger = new Mock<ILogger<CreateViewModel>>();
         var mockBrowserFile = new Mock<IBrowserFile>();
         mockBrowserFile.Setup(file => file.OpenReadStream(It.IsAny<long>(), It.IsAny<CancellationToken>()))
                        .Returns(() => new MemoryStream(encoding.GetBytes(str), false));
 
-        var viewModel = new UploadFilesViewModel(mockHostService.Object, mockLogger.Object)
+        var viewModel = new CreateViewModel(mockUploadFileService.Object, mockLogger.Object)
         {
             SelectedFile = mockBrowserFile.Object
         };
         await viewModel.UploadSelectedFileAsync();
 
-        mockHostService.Verify(hostService => hostService.UploadFileAsync(It.IsAny<IBrowserFile>()), Times.Once);
+        mockUploadFileService.Verify(service => service.UploadFileAsync(It.IsAny<IBrowserFile>()), Times.Once);
     }
 
     public static IEnumerable<object[]> UploadSelectedFileAsync_TextFile_Success_TestData()
@@ -52,10 +52,10 @@ public class UploadFilesViewModelTest
     [Fact]
     public async Task GetEncodingFromFileAsync_SelectedFileIsNull()
     {
-        var mockHostService = new Mock<IHostService>();
-        var mockLogger = new Mock<ILogger<UploadFilesViewModel>>();
+        var mockUploadFileService = new Mock<IUploadFileService>();
+        var mockLogger = new Mock<ILogger<CreateViewModel>>();
 
-        var viewModel = new UploadFilesViewModel(mockHostService.Object, mockLogger.Object);
+        var viewModel = new CreateViewModel(mockUploadFileService.Object, mockLogger.Object);
         await viewModel.GetEncodingFromFileAsync();
 
         Assert.Null(viewModel.EncodingCodePage);
@@ -66,13 +66,13 @@ public class UploadFilesViewModelTest
     [MemberData(nameof(GetEncodingFromFileAsync_TextFile_Success_TestData))]
     public async Task GetEncodingFromFileAsync_TextFile_Success(string str, Encoding encoding, int expectedCodePage)
     {
-        var mockHostService = new Mock<IHostService>();
-        var mockLogger = new Mock<ILogger<UploadFilesViewModel>>();
+        var mockUploadFileService = new Mock<IUploadFileService>();
+        var mockLogger = new Mock<ILogger<CreateViewModel>>();
         var mockBrowserFile = new Mock<IBrowserFile>();
         mockBrowserFile.Setup(file => file.OpenReadStream(It.IsAny<long>(), It.IsAny<CancellationToken>()))
                        .Returns(() => new MemoryStream(encoding.GetBytes(str), false));
 
-        var viewModel = new UploadFilesViewModel(mockHostService.Object, mockLogger.Object)
+        var viewModel = new CreateViewModel(mockUploadFileService.Object, mockLogger.Object)
         {
             SelectedFile = mockBrowserFile.Object
         };
@@ -96,10 +96,10 @@ public class UploadFilesViewModelTest
     [Fact]
     public async Task ReadFileAsync_SelectedFileIsNull()
     {
-        var mockHostService = new Mock<IHostService>();
-        var mockLogger = new Mock<ILogger<UploadFilesViewModel>>();
+        var mockUploadFileService = new Mock<IUploadFileService>();
+        var mockLogger = new Mock<ILogger<CreateViewModel>>();
 
-        var viewModel = new UploadFilesViewModel(mockHostService.Object, mockLogger.Object)
+        var viewModel = new CreateViewModel(mockUploadFileService.Object, mockLogger.Object)
         {
             SelectedFile = null,
             EncodingCodePage = 932
@@ -112,13 +112,13 @@ public class UploadFilesViewModelTest
     [Fact]
     public async Task ReadFileAsync_EncodingCodePageIsNull()
     {
-        var mockHostService = new Mock<IHostService>();
-        var mockLogger = new Mock<ILogger<UploadFilesViewModel>>();
+        var mockUploadFileService = new Mock<IUploadFileService>();
+        var mockLogger = new Mock<ILogger<CreateViewModel>>();
         var mockBrowserFile = new Mock<IBrowserFile>();
         mockBrowserFile.Setup(file => file.OpenReadStream(It.IsAny<long>(), It.IsAny<CancellationToken>()))
                        .Returns(() => new MemoryStream(Encoding.UTF8.GetBytes("テストデータ"), false));
 
-        var viewModel = new UploadFilesViewModel(mockHostService.Object, mockLogger.Object)
+        var viewModel = new CreateViewModel(mockUploadFileService.Object, mockLogger.Object)
         {
             SelectedFile = mockBrowserFile.Object,
             EncodingCodePage = null
@@ -132,13 +132,13 @@ public class UploadFilesViewModelTest
     [Fact]
     public async Task ReadFileAsync_InvalidEncodingCodePage()
     {
-        var mockHostService = new Mock<IHostService>();
-        var mockLogger = new Mock<ILogger<UploadFilesViewModel>>();
+        var mockUploadFileService = new Mock<IUploadFileService>();
+        var mockLogger = new Mock<ILogger<CreateViewModel>>();
         var mockBrowserFile = new Mock<IBrowserFile>();
         mockBrowserFile.Setup(file => file.OpenReadStream(It.IsAny<long>(), It.IsAny<CancellationToken>()))
                        .Returns(() => new MemoryStream(Encoding.UTF8.GetBytes("テストデータ"), false));
 
-        var viewModel = new UploadFilesViewModel(mockHostService.Object, mockLogger.Object)
+        var viewModel = new CreateViewModel(mockUploadFileService.Object, mockLogger.Object)
         {
             SelectedFile = mockBrowserFile.Object,
             EncodingCodePage = -1
@@ -151,13 +151,13 @@ public class UploadFilesViewModelTest
     [Fact]
     public async Task ReadFileAsync_Success()
     {
-        var mockHostService = new Mock<IHostService>();
-        var mockLogger = new Mock<ILogger<UploadFilesViewModel>>();
+        var mockUploadFileService = new Mock<IUploadFileService>();
+        var mockLogger = new Mock<ILogger<CreateViewModel>>();
         var mockBrowserFile = new Mock<IBrowserFile>();
         mockBrowserFile.Setup(file => file.OpenReadStream(It.IsAny<long>(), It.IsAny<CancellationToken>()))
                        .Returns(() => new MemoryStream(Encoding.UTF8.GetBytes("テストデータ"), false));
 
-        var viewModel = new UploadFilesViewModel(mockHostService.Object, mockLogger.Object)
+        var viewModel = new CreateViewModel(mockUploadFileService.Object, mockLogger.Object)
         {
             SelectedFile = mockBrowserFile.Object,
             EncodingCodePage = Encoding.UTF8.CodePage

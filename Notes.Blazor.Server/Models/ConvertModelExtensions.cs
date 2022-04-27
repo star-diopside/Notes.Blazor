@@ -6,12 +6,17 @@ namespace Notes.Blazor.Server.Models;
 public static class ConvertModelExtensions
 {
     /// <summary>
-    /// <see cref="UserFile"/>オブジェクトを<see cref="UploadFile"/>に変換する。
+    /// <see cref="UserFile"/>オブジェクトを<see cref="UploadedFile"/>に変換する。
     /// </summary>
     /// <param name="userFile">変換元の<see cref="UserFile"/>オブジェクト</param>
-    /// <returns>変換した<see cref="UploadFile"/>オブジェクト</returns>
-    public static UploadFile ToUploadFile(this UserFile userFile)
+    /// <returns>変換した<see cref="UploadedFile"/>オブジェクト</returns>
+    public static UploadedFile ToUploadedFile(this UserFile userFile)
     {
-        return new UploadFile(userFile.FileName, userFile.ContentType, userFile.Length, userFile.HashValue);
+        return new UploadedFile(
+            Id: userFile.Id,
+            FileName: userFile.FileName,
+            ContentType: userFile.ContentType,
+            Length: userFile.Length,
+            HashValue: userFile.HashValue);
     }
 }

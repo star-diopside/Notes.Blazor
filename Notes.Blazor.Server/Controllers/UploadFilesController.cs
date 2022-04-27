@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Notes.Blazor.Data.Models;
 using Notes.Blazor.Data.Repositories;
 using Notes.Blazor.Server.Models;
+using Notes.Blazor.Shared;
 using System.Security.Cryptography;
 
 namespace Notes.Blazor.Server.Controllers;
@@ -17,6 +18,12 @@ public class UploadFilesController : ControllerBase
         _userFileRepository = userFileRepository;
     }
 
+    [HttpGet]
+    public IAsyncEnumerable<UploadedFile> IndexAsync()
+    {
+        return _userFileRepository.FindAllAsync(userFile => userFile.ToUploadedFile());
+    }
+
     [HttpGet("{id}")]
     public async ValueTask<IActionResult> GetAsync(int id)
     {
@@ -27,7 +34,7 @@ public class UploadFilesController : ControllerBase
             return NotFound();
         }
 
-        return Ok(userFile.ToUploadFile());
+        return Ok(userFile.ToUploadedFile());
     }
 
     [HttpPost]
@@ -50,6 +57,6 @@ public class UploadFilesController : ControllerBase
         });
         await _userFileRepository.SaveChangesAsync();
 
-        return CreatedAtAction("Get", new { id = userFile.Id }, userFile.ToUploadFile());
+        return CreatedAtAction("Get", new { id = userFile.Id }, userFile.ToUploadedFile());
     }
 }

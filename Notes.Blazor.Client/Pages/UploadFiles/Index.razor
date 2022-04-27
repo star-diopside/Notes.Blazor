@@ -1,0 +1,48 @@
+﻿@page "/uploadfiles"
+@using Notes.Blazor.Client.ViewModels.UploadFiles
+@inject IndexViewModel ViewModel
+
+<PageTitle>Upload files</PageTitle>
+
+<h1>Upload files</h1>
+
+@if (isLoading)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th class="text-end">#</th>
+                <th>FileName</th>
+                <th>ContentType</th>
+                <th class="text-end">Length</th>
+                <th>HashValue</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var uploadedFile in ViewModel.UploadedFiles)
+            {
+                <tr>
+                    <td class="text-end">@uploadedFile.Id</td>
+                    <td>@uploadedFile.FileName</td>
+                    <td>@uploadedFile.ContentType</td>
+                    <td class="text-end">@uploadedFile.Length.ToString("#,#")</td>
+                    <td>@uploadedFile.HashValue</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.ListAsync();
+        isLoading = false;
+    }
+}
