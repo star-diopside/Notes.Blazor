@@ -9,11 +9,11 @@ namespace Notes.Blazor.Server.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class UploadFilesController : ControllerBase
+public class UserFilesController : ControllerBase
 {
     private readonly IUserFileRepository _userFileRepository;
 
-    public UploadFilesController(IUserFileRepository userFileRepository)
+    public UserFilesController(IUserFileRepository userFileRepository)
     {
         _userFileRepository = userFileRepository;
     }

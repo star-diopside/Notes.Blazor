@@ -12,14 +12,14 @@ using Xunit;
 
 namespace Notes.Blazor.Server.Tests.Controllers;
 
-public class UploadFilesControllerTest
+public class UserFilesControllerTest
 {
     [Fact]
     public async Task GetAsync_NotFound()
     {
         var mockUserFileRepository = new Mock<IUserFileRepository>();
 
-        var controller = new UploadFilesController(mockUserFileRepository.Object);
+        var controller = new UserFilesController(mockUserFileRepository.Object);
         var result = await controller.GetAsync(new Random().Next());
 
         var notFoundResult = Assert.IsType<NotFoundResult>(result);
@@ -35,7 +35,7 @@ public class UploadFilesControllerTest
         mockUserFileRepository.Setup(repository => repository.FindByIdAsync(id))
                               .ReturnsAsync(() => new UserFile(fileName, length, hashValue) { Id = id, ContentType = contentType });
 
-        var controller = new UploadFilesController(mockUserFileRepository.Object);
+        var controller = new UserFilesController(mockUserFileRepository.Object);
         var result = await controller.GetAsync(id);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -72,7 +72,7 @@ public class UploadFilesControllerTest
         mockFormFile.Setup(file => file.OpenReadStream())
                     .Returns(() => new MemoryStream(data, false));
 
-        var controller = new UploadFilesController(mockUserFileRepository.Object);
+        var controller = new UserFilesController(mockUserFileRepository.Object);
         var result = await controller.PostAsync(mockFormFile.Object);
 
         mockUserFileRepository.Verify(repository => repository.Add(It.Is<UserFile>(

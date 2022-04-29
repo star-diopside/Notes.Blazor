@@ -18,7 +18,7 @@ public class UploadFileService : IUploadFileService
 
     public Task<UploadedFile[]?> ListAsync()
     {
-        return _httpClient.GetFromJsonAsync<UploadedFile[]>("UploadFiles");
+        return _httpClient.GetFromJsonAsync<UploadedFile[]>("UserFiles");
     }
 
     public async Task<UploadedFile?> UploadFileAsync(IBrowserFile file)
@@ -31,7 +31,7 @@ public class UploadFileService : IUploadFileService
         }
         multipart.Add(content, "file", file.Name);
 
-        using var response = await _httpClient.PostAsync("UploadFiles", multipart).ConfigureAwait(false);
+        using var response = await _httpClient.PostAsync("UserFiles", multipart).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<UploadedFile>().ConfigureAwait(false);
     }
