@@ -9,9 +9,13 @@
 <EditForm Model="ViewModel">
     <div class="row mb-3">
         <div class="col-sm">
-            <div class="input-group">
-                <InputFile OnChange="ChangeSelectedFileAsync" class="form-control" id="inputGroupFile" aria-describedby="inputGroupFileAddon" aria-label="Upload" />
-                <button type="button" class="btn btn-outline-primary" id="inputGroupFileAddon" @onclick="ViewModel.UploadSelectedFileAsync">アップロード</button>
+            <div class="@("input-group" + (isUploaded ? " has-validation" : ""))">
+                <InputFile OnChange="ChangeSelectedFileAsync" class="@("form-control" + (isUploaded ? " is-valid" : ""))" id="inputGroupFile" aria-describedby="inputGroupFileAddon" aria-label="Upload" />
+                <button type="button" class="btn btn-outline-primary" id="inputGroupFileAddon" @onclick="UploadSelectedFileAsync">アップロード</button>
+                @if (isUploaded)
+                {
+                    <div class="valid-feedback">アップロード済み</div>
+                }
             </div>
         </div>
     </div>
@@ -89,10 +93,20 @@
 </EditForm>
 
 @code {
+    private bool isUploaded;
+
     private async Task ChangeSelectedFileAsync(InputFileChangeEventArgs e)
     {
+        isUploaded = false;
         ViewModel.SelectedFile = e.File;
         await ViewModel.GetEncodingFromFileAsync();
+    }
+
+    private async Task UploadSelectedFileAsync()
+    {
+        isUploaded = false;
+        await ViewModel.UploadSelectedFileAsync();
+        isUploaded = true;
     }
 
     private async Task ChangeEncodingCodePageAsync(ChangeEventArgs e)

@@ -4,6 +4,7 @@ using Markdig;
 using Markdown.ColorCode;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.Options;
 using Notes.Blazor.Client.Services;
 using System.Text;
 
@@ -15,6 +16,7 @@ public class CreateViewModel
 {
     private readonly IUploadFileService _uploadFileService;
     private readonly ILogger<CreateViewModel> _logger;
+    private readonly IOptions<NotesClientOptions> _options;
     private readonly MarkdownPipeline _markdownPipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
         .UseColorCode()
@@ -91,10 +93,11 @@ public class CreateViewModel
         return language is null ? string.Empty : new HtmlFormatter().GetHtmlString(Text, language);
     }
 
-    public CreateViewModel(IUploadFileService uploadFileService, ILogger<CreateViewModel> logger)
+    public CreateViewModel(IUploadFileService uploadFileService, ILogger<CreateViewModel> logger, IOptions<NotesClientOptions> options)
     {
         _uploadFileService = uploadFileService;
         _logger = logger;
+        _options = options;
     }
 
     /// <summary>
@@ -142,11 +145,11 @@ public class CreateViewModel
     /// 処理結果としてファイルの内容から自動判別した文字エンコードのコードページと取得した文字列を返す。<br/>
     /// バイナリファイルの場合は<c>(null, null)</c>を返す。
     /// </returns>
-    private static async Task<(int? codepage, string? text)> GetEncodingFromFileAsync(IBrowserFile file)
+    private async Task<(int? codepage, string? text)> GetEncodingFromFileAsync(IBrowserFile file)
     {
         byte[] array;
 
-        using (var stream = file.OpenReadStream())
+        using (var stream = file.OpenReadStream(_options.Value.UploadAllowedSize))
         using (var memory = new MemoryStream())
         {
             await stream.CopyToAsync(memory).ConfigureAwait(false);
@@ -168,7 +171,9 @@ public class CreateViewModel
         if (SelectedFile is not null && EncodingCodePage.HasValue)
         {
             var encoding = Encoding.GetEncoding(EncodingCodePage.GetValueOrDefault());
-            using var reader = new StreamReader(SelectedFile.OpenReadStream(), encoding, IsDetectEncodingFromByteOrderMarks);
+            using var reader = new StreamReader(SelectedFile.OpenReadStream(_options.Value.UploadAllowedSize),
+                                                encoding,
+                                                IsDetectEncodingFromByteOrderMarks);
             Text = await reader.ReadToEndAsync().ConfigureAwait(false);
         }
         else
