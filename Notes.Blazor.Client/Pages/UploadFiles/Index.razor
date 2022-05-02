@@ -1,6 +1,9 @@
 ﻿@page "/uploadfiles"
 @using Notes.Blazor.Client.ViewModels.UploadFiles
+@using Notes.Blazor.Shared
+@implements IAsyncDisposable
 @inject IndexViewModel ViewModel
+@inject IJSRuntime JS
 
 <PageTitle>Upload files</PageTitle>
 
@@ -25,9 +28,10 @@ else
         <tbody>
             @foreach (var uploadedFile in ViewModel.UploadedFiles)
             {
+                var (onclick, onkeydown) = CreateHandler(uploadedFile);
                 <tr>
                     <td class="text-end">@uploadedFile.Id</td>
-                    <td>@uploadedFile.FileName</td>
+                    <td><a class="pe-auto" role="button" tabindex="0" @onclick="onclick" @onkeydown="onkeydown">@uploadedFile.FileName</a></td>
                     <td>@uploadedFile.ContentType</td>
                     <td class="text-end">@uploadedFile.Length.ToString("#,#")</td>
                     <td>@uploadedFile.HashValue</td>
@@ -38,11 +42,51 @@ else
 }
 
 @code {
+    private IJSObjectReference? module;
     private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
         await ViewModel.ListAsync();
         isLoading = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            module = await JS.InvokeAsync<IJSObjectReference>("import", "./scripts.js");
+        }
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if (module is not null)
+        {
+            await module.DisposeAsync();
+        }
+    }
+
+    private (Func<Task> onclick, Func<KeyboardEventArgs, Task> onkeydown) CreateHandler(UploadedFile uploadedFile)
+    {
+        Func<Task> onclick = async () => await DownloadFileAsync(uploadedFile);
+
+        Func<KeyboardEventArgs, Task> onkeydown = async e =>
+        {
+            if (e.Key == "Enter")
+            {
+                await DownloadFileAsync(uploadedFile);
+            }
+        };
+
+        return (onclick, onkeydown);
+    }
+
+    private async Task DownloadFileAsync(UploadedFile file)
+    {
+        if (module is not null)
+        {
+            await module.InvokeVoidAsync("downloadFile", $"UserFiles/{file.Id}/data", file.FileName);
+        }
     }
 }

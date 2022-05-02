@@ -25,6 +25,8 @@ public class UserFile : ITrackable
     [Column("xmin", TypeName = "xid")]
     public uint Version { get; set; }
 
+    public UserFileData? UserFileData { get; set; }
+
     public UserFile(string fileName, long length, string hashValue)
     {
         FileName = fileName;

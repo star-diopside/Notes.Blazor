@@ -6,6 +6,7 @@ namespace Notes.Blazor.Data;
 public class NotesDbContext : DbContext
 {
     public DbSet<UserFile> UserFiles => Set<UserFile>();
+    public DbSet<UserFileData> UserFileData => Set<UserFileData>();
 
     public NotesDbContext(DbContextOptions<NotesDbContext> options) : base(options)
     {

@@ -3,6 +3,7 @@ using Notes.Blazor.Data.Models;
 using Notes.Blazor.Data.Repositories;
 using Notes.Blazor.Server.Models;
 using Notes.Blazor.Shared;
+using System.Net.Mime;
 using System.Security.Cryptography;
 
 namespace Notes.Blazor.Server.Controllers;
@@ -37,10 +38,26 @@ public class UserFilesController : ControllerBase
         return Ok(userFile.ToUploadedFile());
     }
 
+    [HttpGet("{id}/data")]
+    public async Task<IActionResult> DownloadAsync(int id)
+    {
+        var userFile = await _userFileRepository.GetUserFileDataAsync(id);
+
+        if (userFile?.UserFileData?.Data is null)
+        {
+            return NotFound();
+        }
+
+        return File(userFile.UserFileData.Data,
+                    userFile.ContentType ?? MediaTypeNames.Application.Octet,
+                    userFile.FileName);
+    }
+
     [HttpPost]
     public async Task<IActionResult> PostAsync(IFormFile file)
     {
         byte[] hash;
+        byte[] data;
 
         using (var sha256 = SHA256.Create())
         using (var stream = file.OpenReadStream())
@@ -48,12 +65,22 @@ public class UserFilesController : ControllerBase
             hash = await sha256.ComputeHashAsync(stream);
         }
 
+        using (var stream = new MemoryStream())
+        {
+            await file.CopyToAsync(stream);
+            data = stream.ToArray();
+        }
+
         var userFile = _userFileRepository.Add(new UserFile(
             fileName: file.FileName,
             length: file.Length,
             hashValue: string.Concat(hash.Select(b => b.ToString("x2"))))
         {
-            ContentType = file.ContentType
+            ContentType = file.ContentType,
+            UserFileData = new()
+            {
+                Data = data
+            }
         });
         await _userFileRepository.SaveChangesAsync();
 

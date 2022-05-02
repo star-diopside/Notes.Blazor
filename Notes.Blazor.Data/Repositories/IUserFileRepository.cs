@@ -9,6 +9,8 @@ public interface IUserFileRepository
 
     ValueTask<UserFile?> FindByIdAsync(int id);
 
+    Task<UserFile?> GetUserFileDataAsync(int id);
+
     UserFile Add(UserFile userFile);
 
     Task<int> SaveChangesAsync();

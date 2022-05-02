@@ -25,6 +25,13 @@ public class UserFileRepository : IUserFileRepository
         return _context.UserFiles.FindAsync(id);
     }
 
+    public Task<UserFile?> GetUserFileDataAsync(int id)
+    {
+        return _context.UserFiles.Include(file => file.UserFileData)
+                                 .Where(file => file.Id == id)
+                                 .SingleOrDefaultAsync();
+    }
+
     public UserFile Add(UserFile userFile)
     {
         return _context.UserFiles.Add(userFile).Entity;
