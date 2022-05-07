@@ -1,4 +1,5 @@
 ﻿@page "/uploadfiles"
+@using Notes.Blazor.Client.Pages.Components
 @using Notes.Blazor.Client.ViewModels.UploadFiles
 @using Notes.Blazor.Shared
 @implements IAsyncDisposable
@@ -15,6 +16,7 @@
 }
 else
 {
+    <Pagination PagesInfo="ViewModel.PagesInfo" OnChange="@(pageNumber => ViewModel.ListAsync(pageNumber))" />
     <table class="table">
         <thead>
             <tr>
@@ -69,7 +71,7 @@ else
 
     private (Func<Task> onclick, Func<KeyboardEventArgs, Task> onkeydown) CreateHandler(UploadedFile uploadedFile)
     {
-        Func<Task> onclick = async () => await DownloadFileAsync(uploadedFile);
+        Func<Task> onclick = () => DownloadFileAsync(uploadedFile);
 
         Func<KeyboardEventArgs, Task> onkeydown = async e =>
         {

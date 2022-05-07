@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Notes.Blazor.Data.Models;
 using Notes.Blazor.Data.Repositories;
 using Notes.Blazor.Server.Models;
-using Notes.Blazor.Shared;
 using System.Net.Mime;
 using System.Security.Cryptography;
+using X.PagedList;
 
 namespace Notes.Blazor.Server.Controllers;
 
@@ -20,9 +20,19 @@ public class UserFilesController : ControllerBase
     }
 
     [HttpGet]
-    public IAsyncEnumerable<UploadedFile> IndexAsync()
+    public async ValueTask<IActionResult> IndexAsync(int? pageNumber, int? pageSize)
     {
-        return _userFileRepository.FindAllAsync(userFile => userFile.ToUploadedFile());
+        if (pageSize.HasValue)
+        {
+            var uploadedFiles = await _userFileRepository.ListAsync(userFile => userFile.ToUploadedFile(),
+                                                                    pageNumber ?? 1,
+                                                                    pageSize.GetValueOrDefault());
+            return Ok(uploadedFiles.ToPagesData());
+        }
+        else
+        {
+            return Ok(new { Data = _userFileRepository.ListAsync(userFile => userFile.ToUploadedFile()) });
+        }
     }
 
     [HttpGet("{id}")]

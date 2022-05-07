@@ -8,8 +8,9 @@ public interface IUploadFileService
     /// <summary>
     /// アップロードされたファイル一覧を取得する。
     /// </summary>
+    /// <param name="pageNumber">データを取得するページ番号。<c>null</c>の場合は最初のページを取得する。</param>
     /// <returns>非同期操作を表すタスクオブジェクト</returns>
-    Task<UploadedFile[]?> ListAsync();
+    Task<PagesData<UploadedFile>?> ListAsync(int? pageNumber = null);
 
     /// <summary>
     /// ファイルをアップロードする。

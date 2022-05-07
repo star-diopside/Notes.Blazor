@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Notes.Blazor.Shared;
 using System.Net.Http.Json;
@@ -16,9 +17,22 @@ public class UploadFileService : IUploadFileService
         _options = options;
     }
 
-    public Task<UploadedFile[]?> ListAsync()
+    public Task<PagesData<UploadedFile>?> ListAsync(int? pageNumber = null)
     {
-        return _httpClient.GetFromJsonAsync<UploadedFile[]>("UserFiles");
+        var queryString = new Dictionary<string, string>();
+
+        if (pageNumber.HasValue)
+        {
+            queryString["pageNumber"] = pageNumber.GetValueOrDefault().ToString();
+        }
+
+        if (_options.Value.PageSize.HasValue)
+        {
+            queryString["pageSize"] = _options.Value.PageSize.GetValueOrDefault().ToString();
+        }
+
+        var uri = QueryHelpers.AddQueryString("UserFiles", queryString);
+        return _httpClient.GetFromJsonAsync<PagesData<UploadedFile>>(uri);
     }
 
     public async Task<UploadedFile?> UploadFileAsync(IBrowserFile file)

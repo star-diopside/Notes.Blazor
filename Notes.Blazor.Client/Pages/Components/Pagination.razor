@@ -1,0 +1,30 @@
+﻿@using Notes.Blazor.Shared
+
+@if (PagesInfo is not null)
+{
+    <nav aria-label="page navigation">
+        <ul class="pagination">
+            <li class="@("page-item" + (PagesInfo.HasPreviousPage ? "" : " disabled"))">
+                <button class="page-link" aria-label="Previous" @onclick="@(() => OnChange.InvokeAsync(PagesInfo.PageNumber - 1))" disabled="@(!PagesInfo.HasPreviousPage)"><span aria-hidden="true">&laquo;</span></button>
+            </li>
+            @for (int i = 1; i <= PagesInfo.PageCount; i++)
+            {
+                var pageNumber = i;
+                <li class="@("page-item" + (PagesInfo.PageNumber == pageNumber ? " active" : ""))">
+                    <button class="page-link" @onclick="@(() => OnChange.InvokeAsync(pageNumber))" disabled="@(PagesInfo.PageNumber == pageNumber)">@pageNumber</button>
+                </li>
+            }
+            <li class="@("page-item" + (PagesInfo.HasNextPage ? "" : " disabled"))">
+                <button class="page-link" aria-label="Next" @onclick="@(() => OnChange.InvokeAsync(PagesInfo.PageNumber + 1))" disabled="@(!PagesInfo.HasNextPage)"><span aria-hidden="true">&raquo;</span></button>
+            </li>
+        </ul>
+    </nav>
+}
+
+@code {
+    [Parameter]
+    public PagesInfo? PagesInfo { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnChange { get; set; }
+}

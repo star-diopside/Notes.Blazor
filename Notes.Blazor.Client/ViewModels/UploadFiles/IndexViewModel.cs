@@ -6,17 +6,19 @@ namespace Notes.Blazor.Client.ViewModels.UploadFiles;
 public class IndexViewModel
 {
     private readonly IUploadFileService _uploadFileService;
-    private UploadedFile[]? _uploadedFiles;
+    private PagesData<UploadedFile>? _pagesData;
 
-    public ReadOnlySpan<UploadedFile> UploadedFiles => _uploadedFiles;
+    public PagesInfo? PagesInfo => _pagesData?.Info;
+
+    public IEnumerable<UploadedFile> UploadedFiles => _pagesData?.Data ?? Enumerable.Empty<UploadedFile>();
 
     public IndexViewModel(IUploadFileService uploadFileService)
     {
         _uploadFileService = uploadFileService;
     }
 
-    public async Task ListAsync()
+    public async Task ListAsync(int? pageNumber = null)
     {
-        _uploadedFiles = await _uploadFileService.ListAsync().ConfigureAwait(false);
+        _pagesData = await _uploadFileService.ListAsync(pageNumber).ConfigureAwait(false);
     }
 }
